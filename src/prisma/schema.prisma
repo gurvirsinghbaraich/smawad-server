@@ -1,0 +1,229 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+// "db" is a datasource that employs SQL Server as the database provider.
+// The URL for the database connection is fetched from the "DATABASE_URL" environment variable.
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+// The "appOrganization" model depicts an organization with a unique id "orgId".
+// It stores detailed information about the organization, contact person details, and identifiers for type and industry.
+model appOrganization {
+  orgId             Int      @id @default(autoincrement())
+  createdBy         Int
+  updatedBy         Int
+  industrySubTypeId Int?
+  isActive          Boolean?
+
+  organizationName  String
+  orgPOCFirstName   String?
+  orgPOCMiddleName  String?
+  orgPOCLastName    String?
+  orgPrimaryEmailId String?
+
+  orgTypeId         Int?
+  organizationTypes lookupOrganizationType? @relation(fields: [orgTypeId], references: [orgTypeId])
+
+  industryTypeId Int?
+  industryTypes  lookupIndustryType? @relation(fields: [industryTypeId], references: [industryTypeId])
+
+  createdOn               DateTime?
+  updatedOn               DateTime?
+  orgBranch               orgBranch[]
+  organizationPhoneNumber organizationPhoneNumber[]
+  organizationAddress     organizationAddress[]
+}
+
+// The "lookupIndustryType" model holds industry type data.
+// It contains the ids and names of different industry types, along with a reference to the parent id for subdivision of industries.
+model lookupIndustryType {
+  industryTypeId       Int               @id @default(autoincrement())
+  parentIndustryTypeId Int?
+  industryType         String
+  orgBranch            orgBranch[]
+  appOrganization      appOrganization[]
+}
+
+// The "lookupOrganizationType" model maps the different types of organizations.
+// It records the identifiers and names of various organization types in the database.
+model lookupOrganizationType {
+  orgTypeId       Int               @id @default(autoincrement())
+  orgType         String
+  appOrganization appOrganization[]
+}
+
+// The "appRole" model symbolizes the various roles in an organization.
+model appRole {
+  roleId      Int  @id @default(autoincrement())
+  orgBranchId Int?
+  createdBy   Int
+  updatedBy   Int
+
+  roleName String
+  roleDesc String?
+
+  createdOn DateTime?
+  updatedOn DateTime?
+
+  isActive      Boolean
+  isSystemRole  Boolean
+  isDefaultRole Boolean
+}
+
+// The "orgBranch" model represents the various branches within an organization.
+model orgBranch {
+  orgBranchId       Int  @id @default(autoincrement())
+  parentOrgBranchId Int?
+
+  // Audit trail fields 
+  createdBy Int
+  updatedBy Int
+
+  // Details and description of branch
+  orgBranchName String?
+  orgBranchNote String?
+
+  // Date and time related fields 
+  createdOn DateTime?
+  updatedOn DateTime?
+
+  // Status of organization's branch 
+  isOrgBranch Boolean
+  isActive    Boolean
+
+  // Point to "lookupOrganizationType" for branch type
+  branchTypeId Int?
+
+  // Relate current branch to an organization in "appOrganization" model
+  orgId Int
+  org   appOrganization @relation(fields: [orgId], references: [orgId], onUpdate: NoAction)
+
+  // Incorporate industry type from "lookupIndustryType" model
+  industryTypeId Int?
+  industryType   lookupIndustryType? @relation(fields: [industryTypeId], references: [industryTypeId])
+}
+
+model organizationPhoneNumber {
+  orgPhoneNumberId  Int @id @default(autoincrement())
+  phoneNumberTypeId Int
+
+  phoneNumber String
+
+  appOrgId Int
+  appOrg   appOrganization @relation(fields: [appOrgId], references: [orgId])
+}
+
+model organizationAddress {
+  orgAddressId Int    @id @default(autoincrement())
+  createdBy    BigInt
+  updatedBy    BigInt
+
+  addressLine1 String
+  addressLine2 String?
+  addressLine3 String?
+  postalCode   String?
+
+  isActive Boolean
+
+  createdOn DateTime?
+  updatedOn DateTime?
+
+  appOrgId Int
+  appOrg   appOrganization @relation(fields: [appOrgId], references: [orgId])
+
+  addressTypeId Int
+  addressType   lookupAddressType @relation(fields: [addressTypeId], references: [addressTypeId])
+
+  cityId Int?
+  city   lookupCity? @relation(fields: [cityId], references: [cityId])
+
+  countryStateId Int?
+  countryState   lookupCountryState? @relation(fields: [countryStateId], references: [countryStateId])
+
+  countryId Int?
+  country   lookupCountry? @relation(fields: [countryId], references: [countryId])
+}
+
+model lookupAddressType {
+  addressTypeId Int            @id @default(autoincrement())
+  languageId    Int
+  language      lookupLanguage @relation(fields: [languageId], references: [languageId])
+
+  addressType         String
+  organizationAddress organizationAddress[]
+}
+
+model lookupLanguage {
+  languageId            Int                     @id @default(autoincrement())
+  langName              String
+  lookupAddressType     lookupAddressType[]
+  lookupCountry         lookupCountry[]
+  lookupCountryState    lookupCountryState[]
+  lookupCity            lookupCity[]
+  lookupPhoneNumberType lookupPhoneNumberType[]
+}
+
+model lookupCity {
+  cityId Int    @id @default(autoincrement())
+  city   String
+
+  countryStateId Int
+  countryState   lookupCountryState @relation(fields: [countryStateId], references: [countryStateId], onUpdate: NoAction)
+
+  languageId          Int
+  language            lookupLanguage        @relation(fields: [languageId], references: [languageId], onUpdate: NoAction)
+  organizationAddress organizationAddress[]
+}
+
+model lookupCountryState {
+  countryStateId Int    @id @default(autoincrement())
+  countryState   String
+
+  countryId Int
+  country   lookupCountry @relation(fields: [countryId], references: [countryId], onUpdate: NoAction)
+
+  languageId          Int
+  language            lookupLanguage        @relation(fields: [languageId], references: [languageId], onUpdate: NoAction)
+  lookupCity          lookupCity[]
+  organizationAddress organizationAddress[]
+}
+
+model lookupCountry {
+  countryId Int    @id @default(autoincrement())
+  country   String
+
+  languageId          Int
+  language            lookupLanguage        @relation(fields: [languageId], references: [languageId], onUpdate: NoAction)
+  lookupCountryState  lookupCountryState[]
+  organizationAddress organizationAddress[]
+}
+
+model appUser {
+  userId    Int @id @default(autoincrement())
+  createdBy Int
+  updatedBy Int
+
+  prefix       String?
+  firstName    String
+  middleName   String?
+  lastName     String?
+  email        String
+  phoneNumber  String?
+  userPassword String
+
+  createdOn DateTime?
+  updatedOn DateTime?
+
+  isActive Boolean
+}
+
+model lookupPhoneNumberType {
+  phoneNumberTypeId Int            @id @default(autoincrement())
+  languageId        Int
+  language          lookupLanguage @relation(fields: [languageId], references: [languageId])
+
+  phoneNumberType String
+}
