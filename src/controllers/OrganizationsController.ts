@@ -73,8 +73,20 @@ export class OrganizationController {
         orgPOCFirstName: z.string().optional(),
         orgPOCMiddleName: z.string().optional(),
         orgPOCLastName: z.string().optional(),
+        orgPrimaryEmailId: z.string().optional(),
         orgTypeId: z.coerce.number(),
         industryTypeId: z.coerce.number(),
+
+        addressType: z.coerce.number(),
+        addressLine1: z.string(),
+        addressLine2: z.string().optional(),
+        addressLine3: z.string().optional(),
+        country: z.coerce.number().optional(),
+        state: z.coerce.number().optional(),
+        city: z.coerce.number().optional(),
+
+        phoneNumberType: z.coerce.number(),
+        phoneNumber: z.string().min(1, "Missing value for 'phoneNumber'"),
       })
       .strict();
 
@@ -85,7 +97,37 @@ export class OrganizationController {
     // Inserting the organization into the database
     const organization = await client.appOrganization.create({
       data: {
-        ...payload,
+        organizationName: payload.organizationName,
+        orgPOCFirstName: payload.orgPOCFirstName,
+        orgPOCMiddleName: payload.orgPOCMiddleName,
+        orgPOCLastName: payload.orgPOCLastName,
+        industryTypeId: payload.industryTypeId,
+        industrySubTypeId: payload.industrySubTypeId,
+        orgTypeId: payload.orgTypeId,
+        isActive: payload.isActive,
+        orgPrimaryEmailId: payload.orgPrimaryEmailId,
+
+        organizationAddress: {
+          create: {
+            addressLine1: payload.addressLine1,
+            addressLine2: payload.addressLine2,
+            addressLine3: payload.addressLine3,
+            addressTypeId: payload.addressType,
+            countryStateId: payload.state,
+            countryId: payload.country,
+            cityId: payload.city,
+            createdBy: request.session.user!.userId,
+            updatedBy: request.session.user!.userId,
+            isActive: payload.isActive,
+          },
+        },
+
+        organizationPhoneNumber: {
+          create: {
+            phoneNumberTypeId: payload.phoneNumberType,
+            phoneNumber: payload.phoneNumber,
+          },
+        },
 
         createdBy: request.session.user!.userId,
         updatedBy: request.session.user!.userId,
@@ -116,6 +158,17 @@ export class OrganizationController {
         orgPOCLastName: z.string().optional(),
         orgTypeId: z.coerce.number(),
         industryTypeId: z.coerce.number(),
+
+        addressType: z.coerce.number(),
+        addressLine1: z.string(),
+        addressLine2: z.string().optional(),
+        addressLine3: z.string().optional(),
+        country: z.coerce.number().optional(),
+        state: z.coerce.number().optional(),
+        city: z.coerce.number().optional(),
+
+        phoneNumberType: z.coerce.number(),
+        phoneNumber: z.string().min(1, "Missing value for 'phoneNumber'"),
       }),
     });
 
