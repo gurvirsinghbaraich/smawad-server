@@ -1,8 +1,6 @@
-import { Request } from "express";
-
-export function getPropertiesFromRequestBody<Properties extends string[]>(
-  request: Request,
-  properties: Properties,
+export function getPropertiesFromRequest<Properties extends string[]>(
+  request: Record<string, unknown>,
+  properties: Properties
 ):
   | { status: "FATAL"; message: string }
   | {
@@ -10,7 +8,7 @@ export function getPropertiesFromRequestBody<Properties extends string[]>(
       properties: Record<Properties[number], unknown>;
     } {
   // Checking to see if the payload has been supplied with the request.
-  if (!request.body) {
+  if (!request) {
     return {
       status: "FATAL",
       message: "Bad Request",
@@ -22,7 +20,7 @@ export function getPropertiesFromRequestBody<Properties extends string[]>(
   for (let i = 0; i < properties.length; i++) {
     // Getting the value of the property.
     const key: string = properties[i];
-    const payload = { ...request.body };
+    const payload = { ...request };
 
     // Getting the value for @key
     const value = (payload as Record<string, unknown>)?.[key];

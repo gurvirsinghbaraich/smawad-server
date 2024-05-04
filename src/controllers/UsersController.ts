@@ -2,7 +2,6 @@ import { appUser } from "@prisma/client";
 import { Request } from "express";
 import { ServerError } from "../utils/classes/ServerError";
 import { getPrismaClient } from "../utils/getPrismaClient";
-import { isAuthenticated } from "../utils/isAuthenticated";
 
 export class UsersController {
   public static async fetchUser(query: {
@@ -18,15 +17,6 @@ export class UsersController {
   }
 
   public static async getUser(request: Request) {
-    // Making sure the user has rights to perform the actions.
-    // TODO: Shift the authentication logic to middlewares
-    if (!isAuthenticated(request)) {
-      throw new ServerError({
-        statusCode: 401,
-        message: "You are not authorized to access the resource!",
-      });
-    }
-
     // Getting the 'userId' from the request.
     const userId = request.params.userId;
 

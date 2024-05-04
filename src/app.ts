@@ -25,7 +25,7 @@ app.use(
       secure: false,
       maxAge: 1000 * 60 * 60 * 24,
     },
-  }),
+  })
 );
 
 // Loading all the api rotues.

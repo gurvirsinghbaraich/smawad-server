@@ -1,6 +1,6 @@
 import { Request } from "express";
 import { ServerError } from "../utils/classes/ServerError";
-import { getPropertiesFromRequestBody } from "../utils/getPropertiesFromRequestBody";
+import { getPropertiesFromRequest } from "../utils/getPropertiesFromRequest";
 import { UsersController } from "./UsersController";
 
 declare module "express-session" {
@@ -17,7 +17,7 @@ declare module "express-session" {
 export class AuthController {
   // The function is responsible for authentication the user.
   public static async signIn(request: Request) {
-    const payload = getPropertiesFromRequestBody(request, [
+    const payload = getPropertiesFromRequest(request.body, [
       "email",
       "password",
     ]);
