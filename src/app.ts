@@ -1,4 +1,5 @@
 import cookieParser from "cookie-parser";
+import cors from "cors";
 import express from "express";
 import session from "express-session";
 import { apiRouter } from "./routes";
@@ -14,6 +15,14 @@ app.use(express.json());
 // Middleware to parse cookies from the requests
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+// Middleware to allow requests from a certian domain
+app.use(
+  cors({
+    origin: ["*"],
+    methods: ["GET", "POST"],
+  })
+);
 
 // Middleware to handle the session
 app.use(
