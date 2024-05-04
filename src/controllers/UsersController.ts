@@ -1,6 +1,6 @@
 import { appUser } from "@prisma/client";
 import { Request } from "express";
-import { ServerError } from "../utils/classes/ServerError";
+import { createError } from "../utils/createError";
 import { getPrismaClient } from "../utils/getPrismaClient";
 
 export class UsersController {
@@ -21,7 +21,7 @@ export class UsersController {
     const userId = request.params.userId;
 
     if (!userId) {
-      throw new ServerError({
+      createError({
         statusCode: 400,
         message: "Bad Request",
       });

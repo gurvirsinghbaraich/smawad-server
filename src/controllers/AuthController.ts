@@ -1,6 +1,7 @@
 import { Request } from "express";
-import { ServerError } from "../utils/classes/ServerError";
+import { createError } from "../utils/createError";
 import { getPropertiesFromRequest } from "../utils/getPropertiesFromRequest";
+import { isAuthenticated } from "../utils/isAuthenticated";
 import { UsersController } from "./UsersController";
 
 declare module "express-session" {
@@ -15,6 +16,13 @@ declare module "express-session" {
 }
 
 export class AuthController {
+  // The function would be responsible to get the authentication status.
+  public static async loggedInStatus(request: Request) {
+    return {
+      status: isAuthenticated(request),
+    };
+  }
+
   // The function is responsible for authentication the user.
   public static async signIn(request: Request) {
     const payload = getPropertiesFromRequest(request.body, [
@@ -23,7 +31,7 @@ export class AuthController {
     ]);
 
     if (payload.status === "FATAL") {
-      throw new ServerError({
+      createError({
         statusCode: 400,
         message: payload.message,
       });
@@ -63,5 +71,23 @@ export class AuthController {
       user: request.session.user,
       authenticated: request.session.authenticated,
     };
+  }
+
+  // The function is responsible for logging out the user.
+  public static async signOut(request: Request) {
+    // Destroy the session
+    return await new Promise((resolve) => {
+      request.session.destroy((error) => {
+        if (error) {
+          resolve({
+            loggedOut: false,
+          });
+        } else {
+          resolve({
+            loggedOut: true,
+          });
+        }
+      });
+    });
   }
 }

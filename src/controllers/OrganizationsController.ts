@@ -1,21 +1,46 @@
+import { Prisma } from "@prisma/client";
+import { DefaultArgs } from "@prisma/client/runtime/library";
 import { Request } from "express";
 import z from "zod";
-import { ServerError } from "../utils/classes/ServerError";
+import { createError } from "../utils/createError";
 import { getPrismaClient } from "../utils/getPrismaClient";
 import { getPropertiesFromRequest } from "../utils/getPropertiesFromRequest";
 
 export class OrganizationController {
   // The following function would be responsible for listing all the organizations that are present in the database.
-  public static async listOrganizations() {
+  public static async listOrganizations(request: Request) {
+    const payload = z.object({
+      cursor: z.coerce.number().optional(),
+    });
+
     const client = getPrismaClient();
+    const { cursor } = payload.parse(request.query);
+
+    let appOrganizationsOptions: Prisma.appOrganizationFindManyArgs<DefaultArgs> =
+      {
+        include: {
+          industryTypes: true,
+          organizationTypes: true,
+        },
+
+        take: 10,
+      };
+
+    if (!isNaN(Number(cursor))) {
+      appOrganizationsOptions = {
+        ...appOrganizationsOptions,
+
+        cursor: {
+          // Skip the last retured organization
+          orgId: cursor! + 1,
+        },
+      };
+    }
 
     // Getting all the organizatons from the database.
-    const organizations = await client.appOrganization.findMany({
-      include: {
-        industryTypes: true,
-        organizationTypes: true,
-      },
-    });
+    const organizations = await client.appOrganization.findMany(
+      appOrganizationsOptions
+    );
 
     return organizations;
   }
@@ -31,7 +56,7 @@ export class OrganizationController {
 
     // Check if there was a problem while getting the required params from the request.
     if (payload.status === "FATAL") {
-      throw new ServerError({
+      createError({
         statusCode: 400,
         message: payload.message,
       });
@@ -41,7 +66,7 @@ export class OrganizationController {
 
     // Make sure the organizationId is type of a number.
     if (isNaN(organizationId)) {
-      throw new ServerError({
+      createError({
         statusCode: 400,
         message: "organizationId must only contain a number.",
       });
