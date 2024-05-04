@@ -10,7 +10,12 @@ export class OrganizationController {
     const client = getPrismaClient();
 
     // Getting all the organizatons from the database.
-    const organizations = await client.appOrganization.findMany();
+    const organizations = await client.appOrganization.findMany({
+      include: {
+        industryTypes: true,
+        organizationTypes: true,
+      },
+    });
 
     return organizations;
   }
@@ -46,6 +51,10 @@ export class OrganizationController {
     const organization = await client.appOrganization.findFirst({
       where: {
         orgId: +organizationId,
+      },
+      include: {
+        industryTypes: true,
+        organizationTypes: true,
       },
     });
 
