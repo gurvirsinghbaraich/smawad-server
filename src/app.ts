@@ -16,14 +16,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Middleware to allow requests from a certian domain
-app.use(
-  cors({
-    origin: ["*"],
-    methods: ["GET", "POST"],
-  })
-);
-
 // Middleware to handle the session
 app.use(
   session({
@@ -34,6 +26,15 @@ app.use(
       secure: false,
       maxAge: 1000 * 60 * 60 * 24,
     },
+  })
+);
+
+// Middleware to allow requests from a certian domain
+app.use(
+  cors({
+    methods: ["*"],
+    credentials: true,
+    origin: "http://localhost:3000",
   })
 );
 
