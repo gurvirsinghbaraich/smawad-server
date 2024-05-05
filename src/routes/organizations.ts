@@ -22,3 +22,12 @@ organizationRouter.post(
   "/create",
   generateResponse(OrganizationController.createOrganizatoin)
 );
+organizationRouter.post(
+  "/update",
+  generateResponse(OrganizationController.patchOrganization)
+);
+
+organizationRouter.post(
+  "/delete",
+  generateResponse(OrganizationController.makeOrganizationInactive)
+);

@@ -80,6 +80,18 @@ export class OrganizationController {
       include: {
         industryTypes: true,
         organizationTypes: true,
+        organizationAddress: {
+          select: {
+            addressLine1: true,
+            addressLine2: true,
+            addressLine3: true,
+            addressTypeId: true,
+            cityId: true,
+            countryStateId: true,
+            countryId: true,
+          },
+        },
+        organizationPhoneNumber: true,
       },
     });
 
@@ -183,6 +195,7 @@ export class OrganizationController {
         orgPOCLastName: z.string().optional(),
         orgTypeId: z.coerce.number(),
         industryTypeId: z.coerce.number(),
+        orgPrimaryEmailId: z.string().optional(),
 
         addressType: z.coerce.number(),
         addressLine1: z.string(),
@@ -206,7 +219,42 @@ export class OrganizationController {
       where: {
         orgId: organizationId,
       },
-      data,
+      data: {
+        organizationName: data.organizationName,
+        orgPOCFirstName: data.orgPOCFirstName,
+        orgPOCMiddleName: data.orgPOCMiddleName,
+        orgPOCLastName: data.orgPOCLastName,
+        industryTypeId: data.industryTypeId,
+        industrySubTypeId: data.industrySubTypeId,
+        orgTypeId: data.orgTypeId,
+        isActive: data.isActive,
+        orgPrimaryEmailId: data.orgPrimaryEmailId,
+
+        organizationAddress: {
+          create: {
+            addressLine1: data.addressLine1,
+            addressLine2: data.addressLine2,
+            addressLine3: data.addressLine3,
+            addressTypeId: data.addressType,
+            countryStateId: data.state,
+            countryId: data.country,
+            cityId: data.city,
+            createdBy: request.session.user!.userId,
+            updatedBy: request.session.user!.userId,
+            isActive: data.isActive,
+          },
+        },
+
+        organizationPhoneNumber: {
+          create: {
+            phoneNumberTypeId: data.phoneNumberType,
+            phoneNumber: data.phoneNumber,
+          },
+        },
+
+        createdBy: request.session.user!.userId,
+        updatedBy: request.session.user!.userId,
+      },
     });
 
     return {
@@ -218,7 +266,7 @@ export class OrganizationController {
   }
 
   // The following funciton is responsible for virtually deleting an organization.
-  private static async makeOrganizationInactive(request: Request) {
+  public static async makeOrganizationInactive(request: Request) {
     // Getting the 'organizationId' and payload from the request and the data that needs to be patched.
     const { organizationId } = z
       .object({ organizationId: z.coerce.number() })
