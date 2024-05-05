@@ -20,7 +20,9 @@
   },
   "homepage": "https://github.com/gurvirsinghbaraich/smawad-server#readme",
   "devDependencies": {
+    "@types/cookie-parser": "^1.4.7",
     "@types/express": "^4.17.21",
+    "@types/express-session": "^1.18.0",
     "@typescript-eslint/eslint-plugin": "7.8.0",
     "@typescript-eslint/parser": "7.8.0",
     "prisma": "^5.13.0",
@@ -28,8 +30,13 @@
   },
   "dependencies": {
     "@prisma/client": "^5.13.0",
+    "@types/cors": "^2.8.17",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.1.3",
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "express-session": "^1.18.0",
+    "zod": "^3.23.6"
   }
 }
