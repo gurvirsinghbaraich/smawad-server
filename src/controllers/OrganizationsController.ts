@@ -38,11 +38,14 @@ export class OrganizationController {
     }
 
     // Getting all the organizatons from the database.
-    const organizations = await client.appOrganization.findMany(
-      appOrganizationsOptions
-    );
+    const [organizations, totalOrganizations] = await client.$transaction([
+      client.appOrganization.findMany(appOrganizationsOptions),
+      client.appOrganization.aggregate({
+        _count: true,
+      }),
+    ]);
 
-    return organizations;
+    return { organizations, count: totalOrganizations._count };
   }
 
   // The following funciton would be responsible for listing out a single organization
