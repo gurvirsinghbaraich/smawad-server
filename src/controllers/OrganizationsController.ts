@@ -24,6 +24,9 @@ export class OrganizationController {
         },
 
         take: 10,
+        orderBy: {
+          orgId: "desc",
+        },
       };
 
     if (!isNaN(Number(page))) {
@@ -33,8 +36,6 @@ export class OrganizationController {
         skip: (page! - 1) * 10,
       };
     }
-
-    console.log(appOrganizationsOptions);
 
     // Getting all the organizatons from the database.
     const [organizations, totalOrganizations] = await client.$transaction([
