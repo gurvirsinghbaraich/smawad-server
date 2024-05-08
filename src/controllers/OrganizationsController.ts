@@ -10,11 +10,11 @@ export class OrganizationController {
   // The following function would be responsible for listing all the organizations that are present in the database.
   public static async listOrganizations(request: Request) {
     const payload = z.object({
-      cursor: z.coerce.number().optional(),
+      page: z.coerce.number().optional(),
     });
 
     const client = getPrismaClient();
-    const { cursor } = payload.parse(request.query);
+    const { page } = payload.parse(request.query);
 
     let appOrganizationsOptions: Prisma.appOrganizationFindManyArgs<DefaultArgs> =
       {
@@ -24,25 +24,28 @@ export class OrganizationController {
         },
 
         take: 10,
+        orderBy: {
+          orgId: "desc",
+        },
       };
 
-    if (!isNaN(Number(cursor))) {
+    if (!isNaN(Number(page))) {
       appOrganizationsOptions = {
         ...appOrganizationsOptions,
 
-        cursor: {
-          // Skip the last retured organization
-          orgId: cursor! + 1,
-        },
+        skip: (page! - 1) * 10,
       };
     }
 
     // Getting all the organizatons from the database.
-    const organizations = await client.appOrganization.findMany(
-      appOrganizationsOptions
-    );
+    const [organizations, totalOrganizations] = await client.$transaction([
+      client.appOrganization.findMany(appOrganizationsOptions),
+      client.appOrganization.aggregate({
+        _count: true,
+      }),
+    ]);
 
-    return organizations;
+    return { organizations, count: totalOrganizations._count };
   }
 
   // The following funciton would be responsible for listing out a single organization
