@@ -293,4 +293,29 @@ export class OrganizationController {
       },
     };
   }
+
+  // The funciton will be responible for virtually deleting organizations
+  public static async bulkMakeOrganizationsInactive(request: Request) {
+    // Getting the organizations from the request.
+    const { organizations } = z
+      .object({
+        organizations: z.array(z.object({ orgId: z.number() })),
+      })
+      .parse(request.body);
+
+    // Making organizations inactive
+    const client = getPrismaClient();
+    return await Promise.all(
+      organizations.map((organization) => {
+        return client.appOrganization.update({
+          data: {
+            isActive: false,
+          },
+          where: {
+            orgId: organization.orgId,
+          },
+        });
+      })
+    );
+  }
 }
