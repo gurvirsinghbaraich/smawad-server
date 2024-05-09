@@ -31,3 +31,8 @@ organizationRouter.post(
   "/delete",
   generateResponse(OrganizationController.makeOrganizationInactive)
 );
+
+organizationRouter.post(
+  "/bulk-delete",
+  generateResponse(OrganizationController.bulkMakeOrganizationsInactive)
+);
