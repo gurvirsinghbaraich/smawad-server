@@ -25,6 +25,7 @@ export class AuthController {
 
   // The function is responsible for authentication the user.
   public static async signIn(request: Request) {
+    console.log(request.get("origin"));
     const payload = getPropertiesFromRequest(request.body, [
       "email",
       "password",

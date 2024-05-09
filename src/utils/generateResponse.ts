@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import { ServerError } from "./classes/ServerError";
 import { ZodError } from "zod";
+import { ServerError } from "./classes/ServerError";
 import { formatZodError } from "./formatZodError";
 
 export function generateResponse<
@@ -29,8 +29,8 @@ export function generateResponse<
           data: null,
           status: "FATAL",
           message: "Bad Request",
-          issues: formatZodError(error)
-        })
+          issues: formatZodError(error),
+        });
       }
 
       if ((error as Error).name === "ServerError") {
@@ -44,8 +44,8 @@ export function generateResponse<
       }
 
       // Log the error to console.
-      console.log((error as Error).message)
-      
+      console.log((error as Error).message);
+
       return response.status(500).json({
         data: null,
         status: "FATAL",

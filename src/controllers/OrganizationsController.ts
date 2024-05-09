@@ -11,16 +11,19 @@ export class OrganizationController {
   public static async listOrganizations(request: Request) {
     const payload = z.object({
       page: z.coerce.number().optional(),
+      search: z.string().optional(),
     });
 
     const client = getPrismaClient();
-    const { page } = payload.parse(request.query);
+    const { page, search } = payload.parse(request.query);
 
     let appOrganizationsOptions: Prisma.appOrganizationFindManyArgs<DefaultArgs> =
       {
         include: {
           industryTypes: true,
           organizationTypes: true,
+          organizationAddress: true,
+          organizationPhoneNumber: { include: { phoneNumberType: true } },
         },
 
         take: 10,
@@ -37,15 +40,57 @@ export class OrganizationController {
       };
     }
 
+    if (search) {
+      appOrganizationsOptions = {
+        ...appOrganizationsOptions,
+        where: {
+          OR: [
+            {
+              organizationName: {
+                contains: search,
+              },
+            },
+            {
+              orgPrimaryEmailId: {
+                contains: search,
+              },
+            },
+            {
+              organizationTypes: {
+                orgType: {
+                  contains: search,
+                },
+              },
+            },
+            {
+              industryTypes: {
+                industryType: {
+                  contains: search,
+                },
+              },
+            },
+          ],
+        },
+      };
+    }
+
     // Getting all the organizatons from the database.
     const [organizations, totalOrganizations] = await client.$transaction([
       client.appOrganization.findMany(appOrganizationsOptions),
       client.appOrganization.aggregate({
         _count: true,
+        where: appOrganizationsOptions.where,
       }),
     ]);
 
-    return { organizations, count: totalOrganizations._count };
+    return {
+      organizations: JSON.parse(
+        JSON.stringify(organizations, (key, value) =>
+          typeof value === "bigint" ? value.toString() : value
+        )
+      ),
+      count: totalOrganizations._count,
+    };
   }
 
   // The following funciton would be responsible for listing out a single organization
