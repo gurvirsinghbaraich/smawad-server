@@ -166,6 +166,10 @@ model lookupLanguage {
   lookupCountryState    lookupCountryState[]
   lookupCity            lookupCity[]
   lookupPhoneNumberType lookupPhoneNumberType[]
+  lookupAttachmentType  lookupAttachmentType[]
+  lookupColour          lookupColour[]
+  lookupSize            lookupSize[]
+  lookupPosition        lookupPosition[]
 }
 
 model lookupCity {
@@ -229,4 +233,33 @@ model lookupPhoneNumberType {
 
   phoneNumberType         String
   organizationPhoneNumber organizationPhoneNumber[]
+}
+
+model lookupAttachmentType {
+  attachmentTypeId Int            @id @default(autoincrement())
+  attachmentType   String
+  languageId       Int
+  lookupLanguage   lookupLanguage @relation(fields: [languageId], references: [languageId])
+}
+
+model lookupColour {
+  colourId   Int            @id @default(autoincrement())
+  colourName String
+  languageId Int
+  language   lookupLanguage @relation(fields: [languageId], references: [languageId])
+  colorCode  String
+}
+
+model lookupSize {
+  sizeId     Int            @id @default(autoincrement())
+  sizeName   String
+  languageId Int
+  language   lookupLanguage @relation(fields: [languageId], references: [languageId])
+}
+
+model lookupPosition {
+  positionId   Int            @id @default(autoincrement())
+  positionName String
+  languageId   Int
+  language     lookupLanguage @relation(fields: [languageId], references: [languageId])
 }
