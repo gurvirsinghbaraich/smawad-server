@@ -107,13 +107,15 @@ model orgBranch {
 }
 
 model organizationPhoneNumber {
-  orgPhoneNumberId  Int @id @default(autoincrement())
-  phoneNumberTypeId Int
+  orgPhoneNumberId Int @id @default(autoincrement())
 
   phoneNumber String
 
   appOrgId Int
   appOrg   appOrganization @relation(fields: [appOrgId], references: [orgId])
+
+  phoneNumberTypeId Int
+  phoneNumberType   lookupPhoneNumberType @relation(fields: [phoneNumberTypeId], references: [phoneNumberTypeId])
 }
 
 model organizationAddress {
@@ -225,5 +227,6 @@ model lookupPhoneNumberType {
   languageId        Int
   language          lookupLanguage @relation(fields: [languageId], references: [languageId])
 
-  phoneNumberType String
+  phoneNumberType         String
+  organizationPhoneNumber organizationPhoneNumber[]
 }
