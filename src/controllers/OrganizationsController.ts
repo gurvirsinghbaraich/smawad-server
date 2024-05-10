@@ -22,7 +22,14 @@ export class OrganizationController {
         include: {
           industryTypes: true,
           organizationTypes: true,
-          organizationAddress: true,
+          organizationAddress: {
+            include: {
+              addressType: true,
+              city: true,
+              country: true,
+              countryState: true,
+            },
+          },
           organizationPhoneNumber: { include: { phoneNumberType: true } },
         },
 
