@@ -12,19 +12,44 @@ lookupRouter.get(
   generateResponse(LookupController.listOrganizationTypes)
 );
 lookupRouter.get(
+  "/organization-types/:orgTypeId",
+  generateResponse(LookupController.getOrganizationType)
+);
+
+lookupRouter.get(
   "/industry-types",
   generateResponse(LookupController.listIndustryTypes)
 );
+lookupRouter.get(
+  "/industry-types/:industryTypeId",
+  generateResponse(LookupController.listIndustryType)
+);
+
 lookupRouter.get(
   "/address-types",
   generateResponse(LookupController.listAddressTypes)
 );
 lookupRouter.get("/cities", generateResponse(LookupController.listCities));
+lookupRouter.get(
+  "/cities/:cityId",
+  generateResponse(LookupController.listCity)
+);
+
 lookupRouter.get("/states", generateResponse(LookupController.listStates));
+lookupRouter.get(
+  "/states/:countryStateId",
+  generateResponse(LookupController.listState)
+);
+
 lookupRouter.get(
   "/countries",
   generateResponse(LookupController.listCountries)
 );
+lookupRouter.get(
+  "/countries/:countryId",
+  generateResponse(LookupController.listCountry)
+);
+
 lookupRouter.get(
   "/phone-number-types",
   generateResponse(LookupController.listPhoneNumbers)
