@@ -12,10 +12,11 @@ export class OrganizationController {
     const payload = z.object({
       page: z.coerce.number().optional(),
       search: z.string().optional(),
+      all: z.string().optional(),
     });
 
     const client = getPrismaClient();
-    const { page, search } = payload.parse(request.query);
+    const { page, search, all } = payload.parse(request.query);
 
     let appOrganizationsOptions: Prisma.appOrganizationFindManyArgs<DefaultArgs> =
       {
@@ -39,12 +40,16 @@ export class OrganizationController {
         },
       };
 
-    if (!isNaN(Number(page))) {
+    if (!isNaN(Number(page)) && all != "true") {
       appOrganizationsOptions = {
         ...appOrganizationsOptions,
 
         skip: (page! - 1) * 10,
       };
+    }
+
+    if (all) {
+      appOrganizationsOptions.take = undefined;
     }
 
     if (search) {
