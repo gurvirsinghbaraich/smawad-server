@@ -42,9 +42,8 @@ model appOrganization {
 model lookupIndustryType {
   industryTypeId       Int               @id @default(autoincrement())
   parentIndustryTypeId Int?
-  industryType         String
-  orgBranch            orgBranch[]
   appOrganization      appOrganization[]
+  orgBranch            orgBranch[]
 }
 
 // The "lookupOrganizationType" model maps the different types of organizations.
