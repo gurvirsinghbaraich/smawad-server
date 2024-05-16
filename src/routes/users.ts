@@ -7,4 +7,13 @@ import { generateResponse } from "../utils/generateResponse";
 export const userRouter = Router();
 
 userRouter.use(useAuth);
+userRouter.get("/", generateResponse(UsersController.listUsers));
 userRouter.get("/:userId", generateResponse(UsersController.getUser));
+
+userRouter.post("/update", generateResponse(UsersController.updateUser));
+userRouter.post("/create", generateResponse(UsersController.createUser));
+userRouter.post("/delete", generateResponse(UsersController.deleteUser));
+userRouter.post(
+  "/bulk-delete",
+  generateResponse(UsersController.bulkDeleteUser)
+);
