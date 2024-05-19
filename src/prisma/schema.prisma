@@ -41,6 +41,7 @@ model appOrganization {
 // It contains the ids and names of different industry types, along with a reference to the parent id for subdivision of industries.
 model lookupIndustryType {
   industryTypeId       Int               @id @default(autoincrement())
+  industryType         String
   parentIndustryTypeId Int?
   appOrganization      appOrganization[]
   orgBranch            orgBranch[]
@@ -70,39 +71,6 @@ model appRole {
   isActive      Boolean
   isSystemRole  Boolean
   isDefaultRole Boolean
-}
-
-// The "orgBranch" model represents the various branches within an organization.
-model orgBranch {
-  orgBranchId       Int  @id @default(autoincrement())
-  parentOrgBranchId Int?
-
-  // Audit trail fields 
-  createdBy Int
-  updatedBy Int
-
-  // Details and description of branch
-  orgBranchName String?
-  orgBranchNote String?
-
-  // Date and time related fields 
-  createdOn DateTime?
-  updatedOn DateTime?
-
-  // Status of organization's branch 
-  isOrgBranch Boolean
-  isActive    Boolean
-
-  // Point to "lookupOrganizationType" for branch type
-  branchTypeId Int?
-
-  // Relate current branch to an organization in "appOrganization" model
-  orgId Int
-  org   appOrganization @relation(fields: [orgId], references: [orgId], onUpdate: NoAction)
-
-  // Incorporate industry type from "lookupIndustryType" model
-  industryTypeId Int?
-  industryType   lookupIndustryType? @relation(fields: [industryTypeId], references: [industryTypeId])
 }
 
 model organizationPhoneNumber {
@@ -155,6 +123,7 @@ model lookupAddressType {
 
   addressType         String
   organizationAddress organizationAddress[]
+  orgBranchAddress    orgBranchAddress[]
 }
 
 model lookupLanguage {
@@ -181,6 +150,7 @@ model lookupCity {
   languageId          Int
   language            lookupLanguage        @relation(fields: [languageId], references: [languageId], onUpdate: NoAction)
   organizationAddress organizationAddress[]
+  orgBranchAddress    orgBranchAddress[]
 }
 
 model lookupCountryState {
@@ -194,6 +164,7 @@ model lookupCountryState {
   language            lookupLanguage        @relation(fields: [languageId], references: [languageId], onUpdate: NoAction)
   lookupCity          lookupCity[]
   organizationAddress organizationAddress[]
+  orgBranchAddress    orgBranchAddress[]
 }
 
 model lookupCountry {
@@ -204,6 +175,7 @@ model lookupCountry {
   language            lookupLanguage        @relation(fields: [languageId], references: [languageId], onUpdate: NoAction)
   lookupCountryState  lookupCountryState[]
   organizationAddress organizationAddress[]
+  orgBranchAddress    orgBranchAddress[]
 }
 
 model appUser {
@@ -232,6 +204,7 @@ model lookupPhoneNumberType {
 
   phoneNumberType         String
   organizationPhoneNumber organizationPhoneNumber[]
+  orgBranchPhoneNumber    orgBranchPhoneNumber[]
 }
 
 model lookupAttachmentType {
@@ -261,4 +234,76 @@ model lookupPosition {
   positionName String
   languageId   Int
   language     lookupLanguage @relation(fields: [languageId], references: [languageId])
+}
+
+model orgBranchAddress {
+  orgBranchAddressId Int                 @id @default(autoincrement())
+  orgBranchId        Int
+  orgBranch          orgBranch           @relation(fields: [orgBranchId], references: [orgBranchId])
+  addressTypeId      Int
+  addressType        lookupAddressType   @relation(fields: [addressTypeId], references: [addressTypeId])
+  addressLine1       String
+  addressLine2       String?
+  addressLine3       String?
+  postalCode         String?
+  cityId             Int?
+  city               lookupCity?         @relation(fields: [cityId], references: [cityId])
+  countryId          Int?
+  country            lookupCountry?      @relation(fields: [countryId], references: [countryId])
+  countryStateId     Int?
+  state              lookupCountryState? @relation(fields: [countryStateId], references: [countryStateId])
+  createdBy          Int
+  updatedBy          Int
+  createdOn          DateTime?           @default(now())
+  updatedOn          DateTime?           @default(now())
+  isActive           Boolean
+}
+
+model orgBranchPhoneNumber {
+  orgBranchPhoneNumberId Int                   @id @default(autoincrement())
+  orgBranchId            Int
+  orgBranch              orgBranch             @relation(fields: [orgBranchId], references: [orgBranchId])
+  phoneNumberTypeId      Int
+  phoneNumberType        lookupPhoneNumberType @relation(fields: [phoneNumberTypeId], references: [phoneNumberTypeId])
+  phoneNumber            String
+  createdBy              Int
+  updatedBy              Int
+  createdOn              DateTime?             @default(now())
+  updatedOn              DateTime?             @default(now())
+  isActive               Boolean?
+}
+
+// The "orgBranch" model represents the various branches within an organization.
+model orgBranch {
+  orgBranchId       Int  @id @default(autoincrement())
+  parentOrgBranchId Int?
+
+  // Audit trail fields 
+  createdBy Int
+  updatedBy Int
+
+  // Details and description of branch
+  orgBranchName String?
+  orgBranchNote String?
+
+  // Date and time related fields 
+  createdOn DateTime?
+  updatedOn DateTime?
+
+  // Status of organization's branch 
+  isOrgBranch Boolean
+  isActive    Boolean
+
+  // Point to "lookupOrganizationType" for branch type
+  branchTypeId Int?
+
+  // Relate current branch to an organization in "appOrganization" model
+  orgId Int
+  org   appOrganization @relation(fields: [orgId], references: [orgId], onUpdate: NoAction)
+
+  // Incorporate industry type from "lookupIndustryType" model
+  industryTypeId       Int?
+  industryType         lookupIndustryType?    @relation(fields: [industryTypeId], references: [industryTypeId])
+  orgBranchAddress     orgBranchAddress[]
+  orgBranchPhoneNumber orgBranchPhoneNumber[]
 }

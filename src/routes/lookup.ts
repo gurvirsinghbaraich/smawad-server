@@ -29,7 +29,7 @@ lookupRouter.get(
   "/address-types",
   generateResponse(LookupController.listAddressTypes)
 );
-lookupRouter.get("/citites/", generateResponse(LookupController.listCities));
+lookupRouter.get("/cities", generateResponse(LookupController.listCities));
 lookupRouter.get(
   "/cities/:cityId",
   generateResponse(LookupController.listCity)

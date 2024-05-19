@@ -2,7 +2,6 @@ import { Prisma, appUser } from "@prisma/client";
 import { DefaultArgs } from "@prisma/client/runtime/library";
 import { Request } from "express";
 import z from "zod";
-import { createError } from "../utils/createError";
 import { getPrismaClient } from "../utils/getPrismaClient";
 import { paginate } from "../utils/paginate";
 
@@ -21,6 +20,9 @@ export class UsersController {
 
   public static async listUsers(request: Request) {
     let usersConfig: Prisma.appUserFindManyArgs<DefaultArgs> = {
+      orderBy: {
+        userId: "desc",
+      },
       select: {
         userId: true,
         email: true,
@@ -98,14 +100,7 @@ export class UsersController {
 
   public static async getUser(request: Request) {
     // Getting the 'userId' from the request.
-    const userId = request.params.userId;
-
-    if (!userId) {
-      createError({
-        statusCode: 400,
-        message: "Bad Request",
-      });
-    }
+    const userId = z.number().parse(+request.params.userId);
 
     return await UsersController.fetchUser({
       where: {
@@ -274,5 +269,40 @@ export class UsersController {
         data: changes,
       },
     };
+  }
+
+  public static async updateUserPassword(userId: number, password: string) {
+    const client = getPrismaClient();
+    await client.appUser.update({
+      where: {
+        userId,
+      },
+      data: {
+        userPassword: password,
+      },
+    });
+  }
+
+  public static async getMyProfile(request: Request) {
+    const client = getPrismaClient();
+
+    return await client.appUser.findFirst({
+      where: {
+        userId: request.session.user!.userId,
+      },
+      select: {
+        createdBy: true,
+        createdOn: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        middleName: true,
+        phoneNumber: true,
+        prefix: true,
+        updatedBy: true,
+        updatedOn: true,
+        userId: true,
+      },
+    });
   }
 }
