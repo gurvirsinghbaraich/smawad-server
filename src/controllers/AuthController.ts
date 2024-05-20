@@ -1,7 +1,11 @@
 import { Request } from "express";
+import z from "zod";
 import { createError } from "../utils/createError";
-import { getPropertiesFromRequest } from "../utils/getPropertiesFromRequest";
 import { isAuthenticated } from "../utils/isAuthenticated";
+import {
+  generateResetToken,
+  verifyResetToken,
+} from "../utils/resetTokenManager"; // Assume these are utility functions you've created for handling tokens
 import { UsersController } from "./UsersController";
 
 declare module "express-session" {
@@ -25,31 +29,22 @@ export class AuthController {
 
   // The function is responsible for authentication the user.
   public static async signIn(request: Request) {
-    console.log(request.get("origin"));
-    const payload = getPropertiesFromRequest(request.body, [
-      "email",
-      "password",
-    ]);
+    const signInSchema = z.object({
+      email: z.string().email(),
+      password: z.string().min(1),
+    });
 
-    if (payload.status === "FATAL") {
-      createError({
-        statusCode: 400,
-        message: payload.message,
-      });
-    }
+    const payload = signInSchema.parse(request.body);
 
     const user = await UsersController.fetchUser({
       where: {
-        email: payload.properties.email as string,
-        userPassword: payload.properties.password as string,
+        email: payload.email,
+        userPassword: payload.password,
       },
     });
 
-    if (!user) {
-      // Saving the user to the session
+    if (!user || !user.isActive) {
       request.session.user = null;
-
-      // Saving the user authentication status
       request.session.authenticated = false;
 
       return {
@@ -58,14 +53,12 @@ export class AuthController {
       };
     }
 
-    // Saving the user to the session
     request.session.user = {
       userId: user.userId,
       email: user.email,
       name: user.firstName,
     };
 
-    // Saving the user authentication status
     request.session.authenticated = true;
 
     return {
@@ -90,5 +83,60 @@ export class AuthController {
         }
       });
     });
+  }
+
+  // The function is responsible for initiating the password reset process.
+  public static async requestPasswordReset(request: Request) {
+    const requestPasswordResetSchema = z.object({
+      email: z.string().email(),
+    });
+
+    const payload = requestPasswordResetSchema.parse(request.body);
+
+    const user = await UsersController.fetchUser({
+      where: {
+        email: payload.email,
+      },
+    });
+
+    if (!user) {
+      createError({
+        statusCode: 404,
+        message: "User not found",
+      });
+    }
+
+    const resetToken = generateResetToken(user.userId);
+
+    console.log(`Password reset token for ${user.email}: ${resetToken}`);
+
+    return {
+      message: "Password reset token generated and logged to the console",
+    };
+  }
+
+  // The function is responsible for resetting the user's password.
+  public static async resetPassword(request: Request) {
+    const resetPasswordSchema = z.object({
+      token: z.string().min(1),
+      newPassword: z.string().min(6),
+    });
+
+    const payload = resetPasswordSchema.parse(request.body);
+
+    const userId = verifyResetToken(payload.token);
+
+    if (!userId) {
+      createError({
+        statusCode: 400,
+        message: "Invalid or expired token",
+      });
+    }
+
+    await UsersController.updateUserPassword(userId, payload.newPassword);
+
+    return {
+      message: "Password has been reset",
+    };
   }
 }

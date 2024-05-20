@@ -226,6 +226,40 @@ export class OrganizationController {
           },
         },
 
+        orgBranch: {
+          create: {
+            isOrgBranch: true,
+            isActive: payload.isActive,
+            industryTypeId: payload.industryTypeId,
+            createdBy: request.session.user!.userId,
+            updatedBy: request.session.user!.userId,
+
+            orgBranchAddress: {
+              create: {
+                addressLine1: payload.addressLine1,
+                addressLine2: payload.addressLine2,
+                addressLine3: payload.addressLine3,
+                countryId: payload.country,
+                countryStateId: payload.state,
+                cityId: payload.city,
+                addressTypeId: payload.addressType,
+                isActive: payload.isActive,
+                updatedBy: request.session.user!.userId,
+                createdBy: request.session.user!.userId,
+              },
+            },
+
+            orgBranchPhoneNumber: {
+              create: {
+                phoneNumberTypeId: payload.phoneNumberType,
+                updatedBy: request.session.user!.userId,
+                createdBy: request.session.user!.userId,
+                phoneNumber: payload.phoneNumber,
+              },
+            },
+          },
+        },
+
         createdBy: request.session.user!.userId,
         updatedBy: request.session.user!.userId,
       },

@@ -2,7 +2,6 @@ import { Prisma, appUser } from "@prisma/client";
 import { DefaultArgs } from "@prisma/client/runtime/library";
 import { Request } from "express";
 import z from "zod";
-import { createError } from "../utils/createError";
 import { getPrismaClient } from "../utils/getPrismaClient";
 import { paginate } from "../utils/paginate";
 
@@ -15,25 +14,17 @@ export class UsersController {
 
     return await client.appUser.findFirst({
       where: query.where,
-      select: query.select,
+      include: {
+        userAddress: true,
+        userPhoneNumber: true,
+      },
     });
   }
 
   public static async listUsers(request: Request) {
     let usersConfig: Prisma.appUserFindManyArgs<DefaultArgs> = {
-      select: {
-        userId: true,
-        email: true,
-        firstName: true,
-        middleName: true,
-        lastName: true,
-        isActive: true,
-        phoneNumber: true,
-        prefix: true,
-        createdBy: true,
-        createdOn: true,
-        updatedBy: true,
-        updatedOn: true,
+      orderBy: {
+        userId: "desc",
       },
     };
 
@@ -88,9 +79,13 @@ export class UsersController {
 
     return {
       users: JSON.parse(
-        JSON.stringify(users, (_, value) =>
-          typeof value === "bigint" ? value.toString() : value
-        )
+        JSON.stringify(users, (key, value) => {
+          if (typeof value === "bigint") {
+            return value.toString();
+          }
+
+          return value;
+        })
       ),
       total: total._count,
     };
@@ -98,14 +93,7 @@ export class UsersController {
 
   public static async getUser(request: Request) {
     // Getting the 'userId' from the request.
-    const userId = request.params.userId;
-
-    if (!userId) {
-      createError({
-        statusCode: 400,
-        message: "Bad Request",
-      });
-    }
+    const userId = z.number().parse(+request.params.userId);
 
     return await UsersController.fetchUser({
       where: {
@@ -137,15 +125,35 @@ export class UsersController {
       middleName,
       phoneNumber,
       userId,
+      addressLine1,
+      addressType,
+      city,
+      country,
+      phoneNumberTypeId,
+      state,
+      addressLine2,
+      addressLine3,
+      orgAddressId,
+      orgPhoneNumberId,
     } = z
       .object({
         userId: z.number(),
         isActive: z.boolean(),
         firstName: z.string(),
+        email: z.string(),
         middleName: z.string(),
         lastName: z.string(),
-        email: z.string(),
+        addressType: z.coerce.number(),
+        addressLine1: z.string(),
+        addressLine2: z.string().optional(),
+        addressLine3: z.string().optional(),
+        phoneNumberTypeId: z.coerce.number(),
         phoneNumber: z.string(),
+        country: z.coerce.number(),
+        state: z.coerce.number(),
+        city: z.coerce.number(),
+        orgPhoneNumberId: z.number().optional(),
+        orgAddressId: z.number().optional(),
       })
       .parse(request.body);
 
@@ -160,7 +168,40 @@ export class UsersController {
         firstName,
         lastName,
         middleName,
-        phoneNumber,
+
+        userAddress: {
+          update: {
+            where: {
+              userAddressId: orgAddressId,
+            },
+            data: {
+              addressLine1,
+              addressLine2,
+              addressLine3,
+              addressTypeId: addressType,
+              cityId: city,
+              countryStateId: state,
+              countryId: country,
+              isActive: isActive,
+              updatedBy: request.session.user!.userId,
+            },
+          },
+        },
+
+        userPhoneNumber: {
+          update: {
+            where: {
+              userPhoneNumberId: orgPhoneNumberId,
+            },
+            data: {
+              phoneNumberTypeId,
+              phoneNumber,
+              isActive: isActive,
+              updatedBy: request.session.user!.userId,
+            },
+          },
+        },
+
         updatedBy: request.session.user!.userId,
       },
     });
@@ -176,21 +217,37 @@ export class UsersController {
   public static async createUser(request: Request) {
     const {
       email,
-      userPassword,
       firstName,
       isActive,
       lastName,
       middleName,
       phoneNumber,
+      addressLine1,
+      addressType,
+      city,
+      country,
+      phoneNumberTypeId,
+      state,
+      addressLine2,
+      addressLine3,
+      password,
     } = z
       .object({
         isActive: z.boolean(),
         firstName: z.string(),
+        email: z.string(),
         middleName: z.string(),
         lastName: z.string(),
-        email: z.string(),
-        userPassword: z.string(),
+        addressType: z.coerce.number(),
+        addressLine1: z.string(),
+        addressLine2: z.string().optional(),
+        addressLine3: z.string().optional(),
+        phoneNumberTypeId: z.coerce.number(),
         phoneNumber: z.string(),
+        country: z.coerce.number(),
+        state: z.coerce.number(),
+        city: z.coerce.number(),
+        password: z.string(),
       })
       .parse(request.body);
 
@@ -202,8 +259,33 @@ export class UsersController {
         firstName,
         lastName,
         middleName,
-        phoneNumber,
-        userPassword,
+        userPassword: password,
+
+        userAddress: {
+          create: {
+            addressLine1,
+            addressLine2,
+            addressLine3,
+            addressTypeId: addressType,
+            cityId: city,
+            countryStateId: state,
+            countryId: country,
+            isActive: isActive,
+            createdBy: request.session.user!.userId,
+            updatedBy: request.session.user!.userId,
+          },
+        },
+
+        userPhoneNumber: {
+          create: {
+            phoneNumberTypeId,
+            phoneNumber,
+            isActive: isActive,
+            updatedBy: request.session.user!.userId,
+            createdBy: request.session.user!.userId,
+          },
+        },
+
         createdBy: request.session.user!.userId,
         updatedBy: request.session.user!.userId,
       },
@@ -274,5 +356,40 @@ export class UsersController {
         data: changes,
       },
     };
+  }
+
+  public static async updateUserPassword(userId: number, password: string) {
+    const client = getPrismaClient();
+    await client.appUser.update({
+      where: {
+        userId,
+      },
+      data: {
+        userPassword: password,
+      },
+    });
+  }
+
+  public static async getMyProfile(request: Request) {
+    const client = getPrismaClient();
+
+    return await client.appUser.findFirst({
+      where: {
+        userId: request.session.user!.userId,
+      },
+      select: {
+        createdBy: true,
+        createdOn: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        middleName: true,
+        phoneNumber: true,
+        prefix: true,
+        updatedBy: true,
+        updatedOn: true,
+        userId: true,
+      },
+    });
   }
 }

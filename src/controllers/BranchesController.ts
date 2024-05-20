@@ -14,6 +14,9 @@ export class BranchesController {
     // Configuration for listing the branches.
     let branchesConfiguration: Prisma.orgBranchFindFirstArgs<DefaultArgs> = {
       ...paginate(request),
+      orderBy: {
+        orgBranchId: "desc",
+      },
       include: {
         industryType: true,
         org: {
@@ -97,6 +100,19 @@ export class BranchesController {
       },
       include: {
         industryType: true,
+        orgBranchAddress: {
+          include: {
+            city: true,
+            addressType: true,
+            country: true,
+            state: true,
+          },
+        },
+        orgBranchPhoneNumber: {
+          include: {
+            phoneNumberType: true,
+          },
+        },
         org: {
           select: {
             orgId: true,
@@ -108,25 +124,72 @@ export class BranchesController {
   }
 
   public static async createBranch(request: Request) {
-    const { industryType, isActive, orgBranchName, organizationName } = z
+    const {
+      industryType,
+      isActive,
+      orgBranchName,
+      organizationName,
+      addressLine1,
+      addressType,
+      phoneNumber,
+      phoneNumberTypeId,
+      city,
+      country,
+      state,
+      addressLine2,
+      addressLine3,
+    } = z
       .object({
         isActive: z.boolean(),
         orgBranchName: z.string(),
         organizationName: z.number(),
         industryType: z.number(),
+        addressType: z.number(),
+        addressLine1: z.string(),
+        addressLine2: z.string().optional(),
+        addressLine3: z.string().optional(),
+        phoneNumberTypeId: z.number(),
+        phoneNumber: z.string(),
+        country: z.number(),
+        state: z.number(),
+        city: z.number(),
       })
       .parse(request.body);
 
     const client = getPrismaClient();
     return await client.orgBranch.create({
       data: {
+        isActive,
         orgBranchName,
+        isOrgBranch: false,
         orgId: organizationName,
         industryTypeId: industryType,
-        isActive,
-        isOrgBranch: true,
         updatedBy: request.session.user!.userId,
         createdBy: request.session.user!.userId,
+
+        orgBranchAddress: {
+          create: {
+            addressLine1,
+            addressLine2,
+            addressLine3,
+            countryId: country,
+            countryStateId: state,
+            cityId: city,
+            addressTypeId: addressType,
+            isActive: isActive,
+            updatedBy: request.session.user!.userId,
+            createdBy: request.session.user!.userId,
+          },
+        },
+
+        orgBranchPhoneNumber: {
+          create: {
+            phoneNumberTypeId,
+            phoneNumber,
+            updatedBy: request.session.user!.userId,
+            createdBy: request.session.user!.userId,
+          },
+        },
       },
     });
   }
@@ -135,9 +198,20 @@ export class BranchesController {
     const {
       industryType,
       isActive,
-      orgBranchId,
       orgBranchName,
       organizationName,
+      addressLine1,
+      addressType,
+      phoneNumber,
+      phoneNumberTypeId,
+      orgAddressId,
+      orgPhoneNumberId,
+      city,
+      country,
+      state,
+      addressLine2,
+      addressLine3,
+      orgBranchId,
     } = z
       .object({
         orgBranchId: z.number(),
@@ -145,6 +219,17 @@ export class BranchesController {
         orgBranchName: z.string(),
         organizationName: z.number(),
         industryType: z.number(),
+        addressType: z.number(),
+        addressLine1: z.string(),
+        addressLine2: z.string().optional(),
+        addressLine3: z.string().optional(),
+        phoneNumberTypeId: z.number(),
+        phoneNumber: z.string(),
+        country: z.number(),
+        state: z.number(),
+        city: z.number(),
+        orgAddressId: z.number(),
+        orgPhoneNumberId: z.number(),
       })
       .parse(request.body);
 
@@ -156,8 +241,39 @@ export class BranchesController {
       data: {
         orgBranchName,
         orgId: organizationName,
-        industryTypeId: industryType,
         isActive,
+
+        orgBranchAddress: {
+          update: {
+            where: {
+              orgBranchAddressId: orgAddressId,
+            },
+            data: {
+              addressLine1,
+              addressLine2,
+              addressLine3,
+              countryStateId: state,
+              countryId: country,
+              cityId: city,
+              addressTypeId: addressType,
+            },
+          },
+        },
+
+        industryTypeId: industryType,
+
+        orgBranchPhoneNumber: {
+          update: {
+            where: {
+              orgBranchPhoneNumberId: orgPhoneNumberId,
+            },
+            data: {
+              phoneNumberTypeId,
+              phoneNumber,
+            },
+          },
+        },
+
         updatedBy: request.session.user!.userId,
       },
     });

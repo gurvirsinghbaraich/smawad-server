@@ -8,6 +8,7 @@ export const userRouter = Router();
 
 userRouter.use(useAuth);
 userRouter.get("/", generateResponse(UsersController.listUsers));
+userRouter.get("/my-profile", generateResponse(UsersController.getMyProfile));
 userRouter.get("/:userId", generateResponse(UsersController.getUser));
 
 userRouter.post("/update", generateResponse(UsersController.updateUser));
