@@ -124,6 +124,7 @@ model lookupAddressType {
   addressType         String
   organizationAddress organizationAddress[]
   orgBranchAddress    orgBranchAddress[]
+  userAddress         userAddress[]
 }
 
 model lookupLanguage {
@@ -151,6 +152,7 @@ model lookupCity {
   language            lookupLanguage        @relation(fields: [languageId], references: [languageId], onUpdate: NoAction)
   organizationAddress organizationAddress[]
   orgBranchAddress    orgBranchAddress[]
+  userAddress         userAddress[]
 }
 
 model lookupCountryState {
@@ -165,6 +167,7 @@ model lookupCountryState {
   lookupCity          lookupCity[]
   organizationAddress organizationAddress[]
   orgBranchAddress    orgBranchAddress[]
+  userAddress         userAddress[]
 }
 
 model lookupCountry {
@@ -176,6 +179,7 @@ model lookupCountry {
   lookupCountryState  lookupCountryState[]
   organizationAddress organizationAddress[]
   orgBranchAddress    orgBranchAddress[]
+  userAddress         userAddress[]
 }
 
 model appUser {
@@ -194,7 +198,9 @@ model appUser {
   createdOn DateTime?
   updatedOn DateTime?
 
-  isActive Boolean
+  isActive        Boolean
+  userAddress     userAddress[]
+  userPhoneNumber userPhoneNumber[]
 }
 
 model lookupPhoneNumberType {
@@ -205,6 +211,7 @@ model lookupPhoneNumberType {
   phoneNumberType         String
   organizationPhoneNumber organizationPhoneNumber[]
   orgBranchPhoneNumber    orgBranchPhoneNumber[]
+  userPhoneNumber         userPhoneNumber[]
 }
 
 model lookupAttachmentType {
@@ -306,4 +313,41 @@ model orgBranch {
   industryType         lookupIndustryType?    @relation(fields: [industryTypeId], references: [industryTypeId])
   orgBranchAddress     orgBranchAddress[]
   orgBranchPhoneNumber orgBranchPhoneNumber[]
+}
+
+model userAddress {
+  userAddressId  Int                 @id @default(autoincrement())
+  userId         Int
+  user           appUser             @relation(fields: [userId], references: [userId])
+  addressTypeId  Int
+  addressType    lookupAddressType   @relation(fields: [addressTypeId], references: [addressTypeId])
+  addressLine1   String
+  addressLine2   String?
+  addressLine3   String?
+  postalCode     String?
+  cityId         Int?
+  city           lookupCity?         @relation(fields: [cityId], references: [cityId])
+  countryStateId Int?
+  state          lookupCountryState? @relation(fields: [countryStateId], references: [countryStateId])
+  countryId      Int?
+  country        lookupCountry?      @relation(fields: [countryId], references: [countryId])
+  createdBy      Int
+  updatedBy      Int
+  createdOn      DateTime?           @default(now())
+  updatedOn      DateTime?           @default(now())
+  isActive       Boolean
+}
+
+model userPhoneNumber {
+  userPhoneNumberId Int                   @id @default(autoincrement())
+  userId            Int
+  user              appUser               @relation(fields: [userId], references: [userId])
+  phoneNumberTypeId Int
+  phoneNumberType   lookupPhoneNumberType @relation(fields: [phoneNumberTypeId], references: [phoneNumberTypeId])
+  phoneNumber       String
+  createdBy         Int
+  updatedBy         Int
+  createdOn         DateTime?             @default(now())
+  updatedOn         DateTime?             @default(now())
+  isActive          Boolean?
 }

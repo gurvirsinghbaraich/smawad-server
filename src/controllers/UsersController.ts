@@ -14,7 +14,10 @@ export class UsersController {
 
     return await client.appUser.findFirst({
       where: query.where,
-      select: query.select,
+      include: {
+        userAddress: true,
+        userPhoneNumber: true,
+      },
     });
   }
 
@@ -22,20 +25,6 @@ export class UsersController {
     let usersConfig: Prisma.appUserFindManyArgs<DefaultArgs> = {
       orderBy: {
         userId: "desc",
-      },
-      select: {
-        userId: true,
-        email: true,
-        firstName: true,
-        middleName: true,
-        lastName: true,
-        isActive: true,
-        phoneNumber: true,
-        prefix: true,
-        createdBy: true,
-        createdOn: true,
-        updatedBy: true,
-        updatedOn: true,
       },
     };
 
@@ -90,9 +79,13 @@ export class UsersController {
 
     return {
       users: JSON.parse(
-        JSON.stringify(users, (_, value) =>
-          typeof value === "bigint" ? value.toString() : value
-        )
+        JSON.stringify(users, (key, value) => {
+          if (typeof value === "bigint") {
+            return value.toString();
+          }
+
+          return value;
+        })
       ),
       total: total._count,
     };
@@ -132,15 +125,35 @@ export class UsersController {
       middleName,
       phoneNumber,
       userId,
+      addressLine1,
+      addressType,
+      city,
+      country,
+      phoneNumberTypeId,
+      state,
+      addressLine2,
+      addressLine3,
+      orgAddressId,
+      orgPhoneNumberId,
     } = z
       .object({
         userId: z.number(),
         isActive: z.boolean(),
         firstName: z.string(),
+        email: z.string(),
         middleName: z.string(),
         lastName: z.string(),
-        email: z.string(),
+        addressType: z.coerce.number(),
+        addressLine1: z.string(),
+        addressLine2: z.string().optional(),
+        addressLine3: z.string().optional(),
+        phoneNumberTypeId: z.coerce.number(),
         phoneNumber: z.string(),
+        country: z.coerce.number(),
+        state: z.coerce.number(),
+        city: z.coerce.number(),
+        orgPhoneNumberId: z.number().optional(),
+        orgAddressId: z.number().optional(),
       })
       .parse(request.body);
 
@@ -155,7 +168,40 @@ export class UsersController {
         firstName,
         lastName,
         middleName,
-        phoneNumber,
+
+        userAddress: {
+          update: {
+            where: {
+              userAddressId: orgAddressId,
+            },
+            data: {
+              addressLine1,
+              addressLine2,
+              addressLine3,
+              addressTypeId: addressType,
+              cityId: city,
+              countryStateId: state,
+              countryId: country,
+              isActive: isActive,
+              updatedBy: request.session.user!.userId,
+            },
+          },
+        },
+
+        userPhoneNumber: {
+          update: {
+            where: {
+              userPhoneNumberId: orgPhoneNumberId,
+            },
+            data: {
+              phoneNumberTypeId,
+              phoneNumber,
+              isActive: isActive,
+              updatedBy: request.session.user!.userId,
+            },
+          },
+        },
+
         updatedBy: request.session.user!.userId,
       },
     });
@@ -171,21 +217,37 @@ export class UsersController {
   public static async createUser(request: Request) {
     const {
       email,
-      userPassword,
       firstName,
       isActive,
       lastName,
       middleName,
       phoneNumber,
+      addressLine1,
+      addressType,
+      city,
+      country,
+      phoneNumberTypeId,
+      state,
+      addressLine2,
+      addressLine3,
+      password,
     } = z
       .object({
         isActive: z.boolean(),
         firstName: z.string(),
+        email: z.string(),
         middleName: z.string(),
         lastName: z.string(),
-        email: z.string(),
-        userPassword: z.string(),
+        addressType: z.coerce.number(),
+        addressLine1: z.string(),
+        addressLine2: z.string().optional(),
+        addressLine3: z.string().optional(),
+        phoneNumberTypeId: z.coerce.number(),
         phoneNumber: z.string(),
+        country: z.coerce.number(),
+        state: z.coerce.number(),
+        city: z.coerce.number(),
+        password: z.string(),
       })
       .parse(request.body);
 
@@ -197,8 +259,33 @@ export class UsersController {
         firstName,
         lastName,
         middleName,
-        phoneNumber,
-        userPassword,
+        userPassword: password,
+
+        userAddress: {
+          create: {
+            addressLine1,
+            addressLine2,
+            addressLine3,
+            addressTypeId: addressType,
+            cityId: city,
+            countryStateId: state,
+            countryId: country,
+            isActive: isActive,
+            createdBy: request.session.user!.userId,
+            updatedBy: request.session.user!.userId,
+          },
+        },
+
+        userPhoneNumber: {
+          create: {
+            phoneNumberTypeId,
+            phoneNumber,
+            isActive: isActive,
+            updatedBy: request.session.user!.userId,
+            createdBy: request.session.user!.userId,
+          },
+        },
+
         createdBy: request.session.user!.userId,
         updatedBy: request.session.user!.userId,
       },

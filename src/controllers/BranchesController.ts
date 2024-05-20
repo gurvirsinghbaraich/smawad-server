@@ -161,7 +161,7 @@ export class BranchesController {
       data: {
         isActive,
         orgBranchName,
-        isOrgBranch: true,
+        isOrgBranch: false,
         orgId: organizationName,
         industryTypeId: industryType,
         updatedBy: request.session.user!.userId,
@@ -239,14 +239,41 @@ export class BranchesController {
         orgBranchId,
       },
       data: {
-        addressLine1,
-        addressLine2,
-        addressLine3,
-        countryId: country,
-        countryStateId: state,
-        cityId: city,
-        addressTypeId: addressType,
-        isActive: isActive,
+        orgBranchName,
+        orgId: organizationName,
+        isActive,
+
+        orgBranchAddress: {
+          update: {
+            where: {
+              orgBranchAddressId: orgAddressId,
+            },
+            data: {
+              addressLine1,
+              addressLine2,
+              addressLine3,
+              countryStateId: state,
+              countryId: country,
+              cityId: city,
+              addressTypeId: addressType,
+            },
+          },
+        },
+
+        industryTypeId: industryType,
+
+        orgBranchPhoneNumber: {
+          update: {
+            where: {
+              orgBranchPhoneNumberId: orgPhoneNumberId,
+            },
+            data: {
+              phoneNumberTypeId,
+              phoneNumber,
+            },
+          },
+        },
+
         updatedBy: request.session.user!.userId,
       },
     });
