@@ -158,6 +158,39 @@ export class UsersController {
       .parse(request.body);
 
     const client = getPrismaClient();
+    const userAddress = {
+      update: {
+        where: {
+          userAddressId: orgAddressId,
+        },
+        data: {
+          addressLine1,
+          addressLine2,
+          addressLine3,
+          addressTypeId: addressType,
+          cityId: city,
+          countryStateId: state,
+          countryId: country,
+          isActive: isActive,
+          updatedBy: request.session.user!.userId,
+        },
+      },
+    };
+
+    const userPhoneNumber = {
+      update: {
+        where: {
+          userPhoneNumberId: orgPhoneNumberId,
+        },
+        data: {
+          phoneNumberTypeId,
+          phoneNumber,
+          isActive: isActive,
+          updatedBy: request.session.user!.userId,
+        },
+      },
+    };
+
     const changes = await client.appUser.update({
       where: {
         userId,
@@ -169,38 +202,8 @@ export class UsersController {
         lastName,
         middleName,
 
-        userAddress: {
-          update: {
-            where: {
-              userAddressId: orgAddressId,
-            },
-            data: {
-              addressLine1,
-              addressLine2,
-              addressLine3,
-              addressTypeId: addressType,
-              cityId: city,
-              countryStateId: state,
-              countryId: country,
-              isActive: isActive,
-              updatedBy: request.session.user!.userId,
-            },
-          },
-        },
-
-        userPhoneNumber: {
-          update: {
-            where: {
-              userPhoneNumberId: orgPhoneNumberId,
-            },
-            data: {
-              phoneNumberTypeId,
-              phoneNumber,
-              isActive: isActive,
-              updatedBy: request.session.user!.userId,
-            },
-          },
-        },
+        userAddress: orgAddressId ? userAddress : undefined,
+        userPhoneNumber: orgPhoneNumberId ? userPhoneNumber : undefined,
 
         updatedBy: request.session.user!.userId,
       },
