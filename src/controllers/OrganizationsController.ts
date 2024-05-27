@@ -97,9 +97,18 @@ export class OrganizationController {
 
     return {
       organizations: JSON.parse(
-        JSON.stringify(organizations, (key, value) =>
-          typeof value === "bigint" ? value.toString() : value
-        )
+        JSON.stringify(organizations, (key, value) => {
+          if (
+            key === "createdOn" ||
+            key === "updatedOn" ||
+            key === "createdBy" ||
+            key === "updatedBy"
+          ) {
+            return null;
+          }
+
+          return typeof value === "bigint" ? value.toString() : value;
+        })
       ),
       count: totalOrganizations._count,
     };
