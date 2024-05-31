@@ -28,11 +28,39 @@ export class UsersController {
       },
     };
 
-    const { search } = z
+    const { search, order, orderBy } = z
       .object({
+        order: z.string().optional(),
+        orderBy: z.string().optional(),
         search: z.string().optional(),
       })
       .parse(request.query);
+
+    const sortingOrder = order === "asc" ? "asc" : "desc";
+
+    if (orderBy === "firstName") {
+      usersConfig.orderBy = {
+        firstName: sortingOrder,
+      };
+    }
+
+    if (orderBy === "lastName") {
+      usersConfig.orderBy = {
+        lastName: sortingOrder,
+      };
+    }
+
+    if (orderBy === "email") {
+      usersConfig.orderBy = {
+        email: sortingOrder,
+      };
+    }
+
+    if (orderBy === "phoneNumber") {
+      usersConfig.orderBy = {
+        phoneNumber: sortingOrder,
+      };
+    }
 
     if (search) {
       usersConfig = {

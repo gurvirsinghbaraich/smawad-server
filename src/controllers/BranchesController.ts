@@ -27,11 +27,37 @@ export class BranchesController {
       },
     };
 
-    const { search } = z
+    const { search, order, orderBy } = z
       .object({
+        order: z.string().optional().default("desc"),
+        orderBy: z.string().default("orgBranchId"),
         search: z.string().optional(),
       })
       .parse(request.query);
+
+    const sortingOrder = order === "asc" ? "asc" : "desc";
+
+    if (orderBy === "orgBranchName") {
+      branchesConfiguration.orderBy = {
+        orgBranchName: sortingOrder,
+      };
+    }
+
+    if (orderBy === "organizationName") {
+      branchesConfiguration.orderBy = {
+        org: {
+          organizationName: sortingOrder,
+        },
+      };
+    }
+
+    if (orderBy === "industryType") {
+      branchesConfiguration.orderBy = {
+        industryType: {
+          industryType: sortingOrder,
+        },
+      };
+    }
 
     if (search) {
       branchesConfiguration = {
