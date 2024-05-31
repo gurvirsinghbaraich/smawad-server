@@ -10,13 +10,15 @@ export class OrganizationController {
   // The following function would be responsible for listing all the organizations that are present in the database.
   public static async listOrganizations(request: Request) {
     const payload = z.object({
-      page: z.coerce.number().optional(),
-      search: z.string().optional(),
       all: z.string().optional(),
+      search: z.string().optional(),
+      page: z.coerce.number().optional(),
+      order: z.string().optional().default("desc"),
+      orderBy: z.string().default("orgId"),
     });
 
     const client = getPrismaClient();
-    const { page, search, all } = payload.parse(request.query);
+    const { page, search, all, orderBy, order } = payload.parse(request.query);
 
     let appOrganizationsOptions: Prisma.appOrganizationFindManyArgs<DefaultArgs> =
       {
@@ -35,10 +37,49 @@ export class OrganizationController {
         },
 
         take: 10,
+      };
+
+    const sortingOrder = order === "asc" ? "asc" : "desc";
+
+    if (orderBy === "organizationName") {
+      appOrganizationsOptions = {
+        ...appOrganizationsOptions,
         orderBy: {
-          orgId: "desc",
+          organizationName: sortingOrder,
         },
       };
+    }
+
+    if (orderBy === "orgPrimaryEmailId") {
+      appOrganizationsOptions = {
+        ...appOrganizationsOptions,
+        orderBy: {
+          orgPrimaryEmailId: sortingOrder,
+        },
+      };
+    }
+
+    if (orderBy === "organizationTypes") {
+      appOrganizationsOptions = {
+        ...appOrganizationsOptions,
+        orderBy: {
+          organizationTypes: {
+            orgType: sortingOrder,
+          },
+        },
+      };
+    }
+
+    if (orderBy === "industryTypes") {
+      appOrganizationsOptions = {
+        ...appOrganizationsOptions,
+        orderBy: {
+          industryTypes: {
+            industryType: sortingOrder,
+          },
+        },
+      };
+    }
 
     if (!isNaN(Number(page)) && all != "true") {
       appOrganizationsOptions = {
