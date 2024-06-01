@@ -411,6 +411,30 @@ export class LookupController {
     });
   }
 
+  public static async listAddressTypes(request: Request) {
+    const configuration: Prisma.lookupAddressTypeFindManyArgs<DefaultArgs> = {
+      ...paginate(request),
+    };
+
+    const client = getPrismaClient();
+    const [addressTypes, totalAddressTypes] = await client.$transaction([
+      client.lookupAddressType.findMany({
+        ...configuration,
+      }),
+      client.lookupAddressType.aggregate({
+        _count: true,
+        where: configuration.where,
+      }),
+    ]);
+
+    return {
+      addressTypes,
+      total: totalAddressTypes._count,
+    };
+  }
+
+  // TODO: Add missing missing methods to create, read single and delete an address type.
+
   public static async listCountries(request: Request) {
     const configuration: Prisma.lookupCountryFindManyArgs<DefaultArgs> = {
       ...paginate(request),

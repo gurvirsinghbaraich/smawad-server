@@ -98,3 +98,9 @@ lookupRouter.post(
   "/phone-number-types/:phoneNumberTypeId",
   generateResponse(LookupController.updatePhoneNumber)
 );
+
+// Address Types
+lookupRouter.get(
+  "/address-types",
+  generateResponse(LookupController.listAddressTypes)
+);
