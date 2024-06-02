@@ -15,10 +15,13 @@ export class OrganizationController {
       page: z.coerce.number().optional(),
       order: z.string().optional().default("desc"),
       orderBy: z.string().default("orgId"),
+      filters: z.string().default(JSON.stringify({})),
     });
 
     const client = getPrismaClient();
-    const { page, search, all, orderBy, order } = payload.parse(request.query);
+    const { page, search, all, orderBy, order, filters } = payload.parse(
+      request.query
+    );
 
     let appOrganizationsOptions: Prisma.appOrganizationFindManyArgs<DefaultArgs> =
       {
@@ -127,7 +130,112 @@ export class OrganizationController {
       };
     }
 
+    const f = JSON.parse(filters);
+
+    if (Object.keys(f).length > 0) {
+      const {
+        organizationName,
+        firstName,
+        industryType,
+        lastName,
+        orgPrimaryEmailId,
+        organizationType,
+      } = z
+        .object({
+          organizationName: z.array(z.string()).default([]),
+          orgPrimaryEmailId: z.array(z.string()).default([]),
+          firstName: z.array(z.string()).default([]),
+          lastName: z.array(z.string()).default([]),
+          organizationType: z.array(z.string()).default([]),
+          industryType: z.array(z.string()).default([]),
+        })
+        .parse(f);
+
+      let AND: Prisma.appOrganizationWhereInput["AND"] = [];
+
+      if (organizationName.length > 0) {
+        AND = [
+          ...AND,
+          {
+            organizationName: {
+              in: organizationName,
+            },
+          },
+        ];
+      }
+
+      if (firstName.length > 0) {
+        AND = [
+          ...AND,
+          {
+            orgPOCFirstName: {
+              in: firstName,
+            },
+          },
+        ];
+      }
+
+      if (industryType.length > 0) {
+        AND = [
+          ...AND,
+          {
+            industryTypes: {
+              industryType: {
+                in: industryType,
+              },
+            },
+          },
+        ];
+      }
+
+      if (lastName.length > 0) {
+        AND = [
+          ...AND,
+          {
+            orgPOCLastName: {
+              in: lastName,
+            },
+          },
+        ];
+      }
+
+      if (orgPrimaryEmailId.length > 0) {
+        AND = [
+          ...AND,
+          {
+            orgPrimaryEmailId: {
+              in: orgPrimaryEmailId,
+            },
+          },
+        ];
+      }
+
+      if (organizationType.length > 0) {
+        AND = [
+          ...AND,
+          {
+            organizationTypes: {
+              orgType: {
+                in: organizationType,
+              },
+            },
+          },
+        ];
+      }
+
+      if (appOrganizationsOptions.where) {
+        appOrganizationsOptions.where = {
+          ...appOrganizationsOptions.where,
+          AND: AND,
+        };
+      } else {
+        appOrganizationsOptions.where = {
+          AND: AND,
+        };
+      }
+    }
     // Getting all the organizatons from the database.
+
     const [organizations, totalOrganizations] = await client.$transaction([
       client.appOrganization.findMany(appOrganizationsOptions),
       client.appOrganization.aggregate({
