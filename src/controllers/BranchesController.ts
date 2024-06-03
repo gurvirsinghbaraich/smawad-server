@@ -27,8 +27,9 @@ export class BranchesController {
       },
     };
 
-    const { search, order, orderBy } = z
+    const { search, order, orderBy, filters } = z
       .object({
+        filters: z.string().default(JSON.stringify({})),
         order: z.string().optional().default("desc"),
         orderBy: z.string().default("orgBranchId"),
         search: z.string().optional(),
@@ -91,6 +92,68 @@ export class BranchesController {
           ],
         },
       };
+    }
+
+    const f = JSON.parse(filters);
+
+    if (Object.keys(f).length > 0) {
+      const { branchName, organizationName, branchType } = z
+        .object({
+          branchName: z.array(z.string()).default([]),
+          organizationName: z.array(z.string()).default([]),
+          branchType: z.array(z.string()).default([]),
+        })
+        .parse(f);
+
+      let AND: Prisma.orgBranchWhereInput["AND"] = [];
+
+      if (branchName.length > 0) {
+        AND = [
+          ...AND,
+          {
+            orgBranchName: {
+              in: branchName,
+            },
+          },
+        ];
+      }
+
+      if (organizationName) {
+        AND = [
+          ...AND,
+          {
+            org: {
+              organizationName: {
+                in: organizationName,
+              },
+            },
+          },
+        ];
+      }
+
+      if (branchType) {
+        AND = [
+          ...AND,
+          {
+            industryType: {
+              industryType: {
+                in: branchType,
+              },
+            },
+          },
+        ];
+      }
+
+      if (branchesConfiguration.where) {
+        branchesConfiguration.where = {
+          ...branchesConfiguration.where,
+          AND: AND,
+        };
+      } else {
+        branchesConfiguration.where = {
+          AND: AND,
+        };
+      }
     }
 
     // Returning the branches obtained from the database

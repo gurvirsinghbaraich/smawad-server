@@ -11,3 +11,10 @@ filtersRouter.get(
   "/organizations",
   generateResponse(FiltersController.organizationFilters)
 );
+
+filtersRouter.get(
+  "/branches",
+  generateResponse(FiltersController.branchesFilters)
+);
+
+filtersRouter.get("/users", generateResponse(FiltersController.usersFilters));

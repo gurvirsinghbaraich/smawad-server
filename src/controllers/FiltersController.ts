@@ -38,4 +38,42 @@ export class FiltersController {
       industryTypes,
     };
   }
+
+  public static async branchesFilters() {
+    const client = getPrismaClient();
+
+    const branches = await client.orgBranch.findMany({
+      select: {
+        orgBranchName: true,
+        industryType: {
+          select: {
+            industryType: true,
+          },
+        },
+        org: {
+          select: {
+            organizationName: true,
+          },
+        },
+      },
+    });
+
+    return {
+      branches,
+    };
+  }
+
+  public static async usersFilters() {
+    const client = getPrismaClient();
+    const users = client.appUser.findMany({
+      select: {
+        firstName: true,
+        lastName: true,
+        phoneNumber: true,
+        email: true,
+      },
+    });
+
+    return { users };
+  }
 }
